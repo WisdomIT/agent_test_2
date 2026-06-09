@@ -1,5 +1,11 @@
 {
   "name": "@chzzk-bot/bot",
   "version": "0.0.1",
-  "private": true
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/index.ts",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  }
 }

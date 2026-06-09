@@ -1,5 +1,11 @@
 {
   "name": "@chzzk-bot/web",
   "version": "0.0.1",
-  "private": true
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  }
 }
