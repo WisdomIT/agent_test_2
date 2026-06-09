@@ -1,0 +1,91 @@
+name: Work item
+description: Create an implementation-sized issue that can be handled by AI automation.
+title: "[Work] "
+labels:
+  - work-item
+  - ai-ready
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for one concrete unit of work. The issue should be specific enough for Claude/Codex automation to implement, test, commit, and open a PR.
+  - type: input
+    id: parent
+    attributes:
+      label: Parent epic
+      description: Link the parent epic issue.
+      placeholder: "#123"
+    validations:
+      required: false
+  - type: textarea
+    id: task
+    attributes:
+      label: Task
+      description: State exactly what should be changed.
+      placeholder: "Implement GitHub webhook signature validation and enqueue accepted events."
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Mention relevant files, existing behavior, constraints, prior decisions, and related issues/PRs.
+      placeholder: |
+        - Related files:
+          - ...
+        - Current behavior:
+          - ...
+        - Constraints:
+          - ...
+    validations:
+      required: true
+  - type: textarea
+    id: requirements
+    attributes:
+      label: Requirements
+      description: Concrete functional and non-functional requirements.
+      placeholder: |
+        - ...
+        - ...
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Checklist that must be true before the PR is ready for review.
+      placeholder: |
+        - [ ] ...
+        - [ ] ...
+    validations:
+      required: true
+  - type: textarea
+    id: test_plan
+    attributes:
+      label: Expected test plan
+      description: Tests, commands, or manual checks the implementation should run.
+      placeholder: |
+        - `python3 -m py_compile ...`
+        - `docker compose config --quiet`
+        - Manual webhook delivery test
+    validations:
+      required: true
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of scope
+      description: What should not be changed in this issue?
+      placeholder: |
+        - ...
+    validations:
+      required: false
+  - type: textarea
+    id: ai_notes
+    attributes:
+      label: Notes for AI worker
+      description: Extra guidance for Claude/Codex, including preferred approach, files to inspect first, or questions to ask if blocked.
+      placeholder: |
+        Inspect these files first:
+        - ...
+    validations:
+      required: false

@@ -1,0 +1,70 @@
+name: Epic issue
+description: Create a milestone-level issue that groups multiple work issues.
+title: "[Epic] "
+labels:
+  - epic
+  - ai-ready
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for a large planning issue. It should describe the outcome, boundaries, and child work items. Implementation should happen in linked work issues, not directly in the epic.
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: Describe the product or engineering outcome this epic should deliver.
+      placeholder: "Example: Automate GitHub issue-to-PR development flow for selected repositories."
+    validations:
+      required: true
+  - type: textarea
+    id: background
+    attributes:
+      label: Background and current state
+      description: Summarize existing behavior, relevant code, decisions already made, and constraints.
+      placeholder: "Mention prior work, related files, server constraints, or operational assumptions."
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: What is included in this epic?
+      placeholder: |
+        - Included:
+          - ...
+        - Excluded:
+          - ...
+    validations:
+      required: true
+  - type: textarea
+    id: child_issues
+    attributes:
+      label: Proposed child issues
+      description: List the work-unit issues that should be created or linked under this epic.
+      placeholder: |
+        - [ ] Create webhook receiver and signature validation
+        - [ ] Add worker state machine
+        - [ ] Add PR review automation
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Epic acceptance criteria
+      description: Define when the whole epic can be considered complete.
+      placeholder: |
+        - [ ] All child issues are closed
+        - [ ] End-to-end test issue produces a PR
+        - [ ] Documentation is updated
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks and open questions
+      description: List known unknowns, dependencies, rollout risks, or decisions needed from humans.
+      placeholder: |
+        - ...
+    validations:
+      required: false
