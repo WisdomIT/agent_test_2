@@ -30,8 +30,6 @@ chzzk-bot/
 ├── apps/
 │   ├── bot/          # 챗봇 워커
 │   └── web/          # Next.js 웹사이트
-├── charts/
-│   └── chzzk-bot/    # Helm Chart
 ├── tsconfig.base.json
 ├── pnpm-workspace.yaml
 └── package.json
@@ -39,8 +37,4 @@ chzzk-bot/
 
 ## Deployment
 
-Kubernetes 위에 Helm Chart로 배포한다.
-
-```bash
-helm install chzzk-bot charts/chzzk-bot
-```
+Kubernetes 위에 Helm Chart로 배포한다. (Helm chart는 추후 `charts/chzzk-bot`에 추가 예정)
