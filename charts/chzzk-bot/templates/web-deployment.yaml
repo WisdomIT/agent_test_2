@@ -23,6 +23,6 @@ spec:
           imagePullPolicy: {{ .Values.web.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: {{ .Values.web.service.port }}
+              containerPort: {{ .Values.web.containerPort }}
               protocol: TCP
           resources: {}

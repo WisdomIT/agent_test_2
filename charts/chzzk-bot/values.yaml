@@ -11,5 +11,6 @@ web:
     repository: chzzk-bot/web
     tag: latest
     pullPolicy: IfNotPresent
+  containerPort: 3000
   service:
     port: 3000
