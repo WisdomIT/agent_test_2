@@ -3,14 +3,14 @@ bot:
   image:
     repository: chzzk-bot/bot
     tag: latest
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
 
 web:
   replicaCount: 1
   image:
     repository: chzzk-bot/web
     tag: latest
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
   containerPort: 3000
   service:
     port: 3000
