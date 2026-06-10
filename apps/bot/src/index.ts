@@ -1,1 +1,1 @@
-// Entry point for the chzzk-bot worker
+console.log("chzzk-bot worker started");
