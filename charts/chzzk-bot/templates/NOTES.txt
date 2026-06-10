@@ -1,0 +1,12 @@
+Chzzk Bot has been deployed!
+
+Components:
+  - Bot worker: {{ include "chzzk-bot.fullname" . }}-bot ({{ .Values.bot.replicaCount }} replica(s))
+  - Web dashboard: {{ include "chzzk-bot.fullname" . }}-web ({{ .Values.web.replicaCount }} replica(s))
+
+To access the web dashboard within the cluster:
+  kubectl port-forward svc/{{ include "chzzk-bot.fullname" . }}-web {{ .Values.web.service.port }}:{{ .Values.web.service.port }}
+  Then open http://localhost:{{ .Values.web.service.port }}
+
+To check the status of your pods:
+  kubectl get pods -l "{{ include "chzzk-bot.selectorLabels" . }}"

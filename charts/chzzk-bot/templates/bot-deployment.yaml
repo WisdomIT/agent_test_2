@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "chzzk-bot.fullname" . }}-bot
+  labels:
+    {{- include "chzzk-bot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: bot
+spec:
+  replicas: {{ .Values.bot.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "chzzk-bot.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: bot
+  template:
+    metadata:
+      labels:
+        {{- include "chzzk-bot.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: bot
+    spec:
+      containers:
+        - name: bot
+          image: "{{ .Values.bot.image.repository }}:{{ .Values.bot.image.tag }}"
+          imagePullPolicy: {{ .Values.bot.image.pullPolicy }}
+          resources: {}

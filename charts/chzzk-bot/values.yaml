@@ -1,0 +1,15 @@
+bot:
+  replicaCount: 1
+  image:
+    repository: chzzk-bot/bot
+    tag: latest
+    pullPolicy: IfNotPresent
+
+web:
+  replicaCount: 1
+  image:
+    repository: chzzk-bot/web
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    port: 3000
