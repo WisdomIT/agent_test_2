@@ -9,4 +9,4 @@ To access the web dashboard within the cluster:
   Then open http://localhost:{{ .Values.web.service.port }}
 
 To check the status of your pods:
-  kubectl get pods -l "{{ include "chzzk-bot.selectorLabels" . }}"
+  kubectl get pods -l "app.kubernetes.io/name={{ include "chzzk-bot.name" . }},app.kubernetes.io/instance={{ .Release.Name }}"
