@@ -1,0 +1,16 @@
+bot:
+  replicaCount: 1
+  image:
+    repository: chzzk-bot/bot
+    tag: latest
+    pullPolicy: Always
+
+web:
+  replicaCount: 1
+  image:
+    repository: chzzk-bot/web
+    tag: latest
+    pullPolicy: Always
+  containerPort: 3000
+  service:
+    port: 3000
