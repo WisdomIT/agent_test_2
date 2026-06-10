@@ -1,0 +1,23 @@
+{
+  "name": "chzzk-bot",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Chzzk chatbot monorepo",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev": "pnpm -r dev",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "packageManager": "pnpm@9.1.0"
+}
