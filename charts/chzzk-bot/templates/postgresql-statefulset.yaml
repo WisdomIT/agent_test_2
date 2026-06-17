@@ -1,4 +1,5 @@
 {{- if .Values.postgresql.enabled }}
+{{- if .Values.postgresql.storage.hostPath.enabled }}
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -13,7 +14,7 @@ spec:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
   hostPath:
-    path: {{ .Values.postgresql.storage.hostPath }}
+    path: {{ .Values.postgresql.storage.hostPath.path }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -30,6 +31,7 @@ spec:
       storage: {{ .Values.postgresql.storage.size }}
   volumeName: {{ include "chzzk-bot.fullname" . }}-postgresql
 ---
+{{- end }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -62,7 +64,14 @@ spec:
             - name: POSTGRES_USER
               value: {{ .Values.postgresql.user | quote }}
             - name: POSTGRES_PASSWORD
-              value: {{ .Values.postgresql.password | quote }}
+              {{- if .Values.postgresql.existingSecret }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgresql.existingSecret }}
+                  key: {{ .Values.postgresql.existingSecretKey }}
+              {{- else }}
+              value: {{ required "postgresql.password가 필요합니다. existingSecret을 사용하거나 설치 시 --set postgresql.password=<비밀번호>를 제공하세요." .Values.postgresql.password | quote }}
+              {{- end }}
             - name: POSTGRES_DB
               value: {{ .Values.postgresql.database | quote }}
           readinessProbe:
@@ -81,8 +90,24 @@ spec:
             - name: data
               mountPath: /var/lib/postgresql/data
           resources: {}
+      {{- if .Values.postgresql.storage.hostPath.enabled }}
       volumes:
         - name: data
           persistentVolumeClaim:
             claimName: {{ include "chzzk-bot.fullname" . }}-postgresql
+      {{- end }}
+  {{- if not .Values.postgresql.storage.hostPath.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        {{- if .Values.postgresql.storage.storageClassName }}
+        storageClassName: {{ .Values.postgresql.storage.storageClassName }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.postgresql.storage.size }}
+  {{- end }}
 {{- end }}
