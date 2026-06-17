@@ -14,3 +14,21 @@ web:
   containerPort: 3000
   service:
     port: 3000
+
+postgresql:
+  enabled: false
+  image: postgres:16-alpine
+  database: chzzk
+  user: chzzk
+  # 설치 시 반드시 제공: --set postgresql.password=<비밀번호>
+  # 또는 existingSecret으로 기존 Secret을 참조하세요.
+  password: ""
+  existingSecret: ""
+  existingSecretKey: "password"
+  storage:
+    size: 5Gi
+    storageClassName: ""
+    hostPath:
+      # 단일 노드 개발 환경 전용. 다중 노드 클러스터에서는 데이터 손실 위험이 있습니다.
+      enabled: false
+      path: /data/postgresql
