@@ -16,7 +16,7 @@ web:
     port: 3000
 
 postgresql:
-  enabled: true
+  enabled: false
   image: postgres:16-alpine
   database: chzzk
   user: chzzk
