@@ -1,0 +1,88 @@
+{{- if .Values.postgresql.enabled }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "chzzk-bot.fullname" . }}-postgresql
+  labels:
+    {{- include "chzzk-bot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql
+spec:
+  capacity:
+    storage: {{ .Values.postgresql.storage.size }}
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: {{ .Values.postgresql.storage.hostPath }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "chzzk-bot.fullname" . }}-postgresql
+  labels:
+    {{- include "chzzk-bot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.postgresql.storage.size }}
+  volumeName: {{ include "chzzk-bot.fullname" . }}-postgresql
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "chzzk-bot.fullname" . }}-postgresql
+  labels:
+    {{- include "chzzk-bot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql
+spec:
+  replicas: 1
+  serviceName: {{ include "chzzk-bot.fullname" . }}-postgresql
+  selector:
+    matchLabels:
+      {{- include "chzzk-bot.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: postgresql
+  template:
+    metadata:
+      labels:
+        {{- include "chzzk-bot.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: postgresql
+    spec:
+      containers:
+        - name: postgresql
+          image: {{ .Values.postgresql.image }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: postgresql
+              containerPort: 5432
+              protocol: TCP
+          env:
+            - name: POSTGRES_USER
+              value: {{ .Values.postgresql.user | quote }}
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.postgresql.password | quote }}
+            - name: POSTGRES_DB
+              value: {{ .Values.postgresql.database | quote }}
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - {{ .Values.postgresql.user | quote }}
+                - -d
+                - {{ .Values.postgresql.database | quote }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+          resources: {}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "chzzk-bot.fullname" . }}-postgresql
+{{- end }}

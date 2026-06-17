@@ -14,3 +14,13 @@ web:
   containerPort: 3000
   service:
     port: 3000
+
+postgresql:
+  enabled: true
+  image: postgres:16-alpine
+  database: chzzk
+  user: chzzk
+  password: changeme
+  storage:
+    hostPath: /data/postgresql
+    size: 5Gi
