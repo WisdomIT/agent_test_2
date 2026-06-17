@@ -64,14 +64,12 @@ spec:
             - name: POSTGRES_USER
               value: {{ .Values.postgresql.user | quote }}
             - name: POSTGRES_PASSWORD
-              {{- if .Values.postgresql.existingSecret }}
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.postgresql.existingSecret }}
+                  name: {{ .Values.postgresql.existingSecret | default (printf "%s-postgresql" (include "chzzk-bot.fullname" .)) }}
                   key: {{ .Values.postgresql.existingSecretKey }}
-              {{- else }}
-              value: {{ required "postgresql.password가 필요합니다. existingSecret을 사용하거나 설치 시 --set postgresql.password=<비밀번호>를 제공하세요." .Values.postgresql.password | quote }}
-              {{- end }}
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
             - name: POSTGRES_DB
               value: {{ .Values.postgresql.database | quote }}
           readinessProbe:
