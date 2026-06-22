@@ -17,6 +17,39 @@ spec:
         {{- include "chzzk-bot.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: web
     spec:
+      {{- if and .Values.web.waitForDependencies (or .Values.postgresql.enabled .Values.redis.enabled) }}
+      initContainers:
+        {{- if .Values.postgresql.enabled }}
+        - name: pg-ready
+          image: postgres:16-alpine
+          command:
+            - sh
+            - -c
+            - |
+              until pg_isready -h {{ include "chzzk-bot.fullname" . }}-postgresql -p 5432; do
+                echo "PostgreSQL 준비 대기 중...";
+                sleep 2;
+              done
+        {{- end }}
+        {{- if .Values.redis.enabled }}
+        - name: redis-ready
+          image: redis:7-alpine
+          env:
+            - name: REDISCLI_AUTH
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.existingSecret | default (printf "%s-redis" (include "chzzk-bot.fullname" .)) }}
+                  key: {{ .Values.redis.existingSecretKey }}
+          command:
+            - sh
+            - -c
+            - |
+              until redis-cli -h {{ include "chzzk-bot.fullname" . }}-redis ping; do
+                echo "Redis 준비 대기 중...";
+                sleep 2;
+              done
+        {{- end }}
+      {{- end }}
       containers:
         - name: web
           image: "{{ .Values.web.image.repository }}:{{ .Values.web.image.tag }}"
@@ -25,4 +58,25 @@ spec:
             - name: http
               containerPort: {{ .Values.web.containerPort }}
               protocol: TCP
+          {{- if or .Values.postgresql.enabled .Values.redis.enabled }}
+          env:
+            {{- if .Values.postgresql.enabled }}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgresql.existingSecret | default (printf "%s-postgresql" (include "chzzk-bot.fullname" .)) }}
+                  key: {{ .Values.postgresql.existingSecretKey }}
+            - name: DATABASE_URL
+              value: "postgresql://{{ .Values.postgresql.user }}:$(POSTGRES_PASSWORD)@{{ include "chzzk-bot.fullname" . }}-postgresql:5432/{{ .Values.postgresql.database }}"
+            {{- end }}
+            {{- if .Values.redis.enabled }}
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.existingSecret | default (printf "%s-redis" (include "chzzk-bot.fullname" .)) }}
+                  key: {{ .Values.redis.existingSecretKey }}
+            - name: REDIS_URL
+              value: "redis://:$(REDIS_PASSWORD)@{{ include "chzzk-bot.fullname" . }}-redis:6379"
+            {{- end }}
+          {{- end }}
           resources: {}
