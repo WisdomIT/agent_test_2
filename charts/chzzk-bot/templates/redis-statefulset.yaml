@@ -1,0 +1,115 @@
+{{- if .Values.redis.enabled }}
+{{- if .Values.redis.password }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "chzzk-bot.fullname" . }}-redis-config
+  labels:
+    {{- include "chzzk-bot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+data:
+  redis.conf: |
+    requirepass {{ .Values.redis.password }}
+---
+{{- end }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "chzzk-bot.fullname" . }}-redis
+  labels:
+    {{- include "chzzk-bot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+spec:
+  capacity:
+    storage: {{ .Values.redis.storage.size }}
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  hostPath:
+    path: {{ .Values.redis.storage.hostPath }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "chzzk-bot.fullname" . }}-redis
+  labels:
+    {{- include "chzzk-bot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""
+  resources:
+    requests:
+      storage: {{ .Values.redis.storage.size }}
+  volumeName: {{ include "chzzk-bot.fullname" . }}-redis
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "chzzk-bot.fullname" . }}-redis
+  labels:
+    {{- include "chzzk-bot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+spec:
+  replicas: 1
+  serviceName: {{ include "chzzk-bot.fullname" . }}-redis
+  selector:
+    matchLabels:
+      {{- include "chzzk-bot.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: redis
+  template:
+    metadata:
+      labels:
+        {{- include "chzzk-bot.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: redis
+    spec:
+      containers:
+        - name: redis
+          image: {{ .Values.redis.image }}
+          imagePullPolicy: IfNotPresent
+          {{- if .Values.redis.password }}
+          command:
+            - redis-server
+            - /etc/redis/redis.conf
+          {{- end }}
+          ports:
+            - name: redis
+              containerPort: 6379
+              protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+                {{- if .Values.redis.password }}
+                - redis-cli
+                - -a
+                - {{ .Values.redis.password | quote }}
+                - --no-auth-warning
+                - ping
+                {{- else }}
+                - redis-cli
+                - ping
+                {{- end }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            {{- if .Values.redis.password }}
+            - name: config
+              mountPath: /etc/redis
+            {{- end }}
+          resources: {}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "chzzk-bot.fullname" . }}-redis
+        {{- if .Values.redis.password }}
+        - name: config
+          configMap:
+            name: {{ include "chzzk-bot.fullname" . }}-redis-config
+        {{- end }}
+{{- end }}

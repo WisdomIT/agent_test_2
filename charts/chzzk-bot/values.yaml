@@ -15,6 +15,14 @@ web:
   service:
     port: 3000
 
+redis:
+  enabled: true
+  image: redis:7-alpine
+  password: ""
+  storage:
+    hostPath: /data/redis
+    size: 2Gi
+
 postgresql:
   enabled: false
   image: postgres:16-alpine
