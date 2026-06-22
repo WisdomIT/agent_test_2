@@ -55,12 +55,22 @@ spec:
           {{- if or .Values.postgresql.enabled .Values.redis.enabled }}
           env:
             {{- if .Values.postgresql.enabled }}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgresql.existingSecret | default (printf "%s-postgresql" (include "chzzk-bot.fullname" .)) }}
+                  key: {{ .Values.postgresql.existingSecretKey }}
             - name: DATABASE_URL
-              value: "postgresql://{{ .Values.postgresql.user }}:{{ .Values.postgresql.password }}@{{ include "chzzk-bot.fullname" . }}-postgresql:5432/{{ .Values.postgresql.database }}"
+              value: "postgresql://{{ .Values.postgresql.user }}:$(POSTGRES_PASSWORD)@{{ include "chzzk-bot.fullname" . }}-postgresql:5432/{{ .Values.postgresql.database }}"
             {{- end }}
             {{- if .Values.redis.enabled }}
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.existingSecret | default (printf "%s-redis" (include "chzzk-bot.fullname" .)) }}
+                  key: {{ .Values.redis.existingSecretKey }}
             - name: REDIS_URL
-              value: "redis://{{ if .Values.redis.password }}:{{ .Values.redis.password }}@{{ end }}{{ include "chzzk-bot.fullname" . }}-redis:6379"
+              value: "redis://:$(REDIS_PASSWORD)@{{ include "chzzk-bot.fullname" . }}-redis:6379"
             {{- end }}
           {{- end }}
           resources: {}
