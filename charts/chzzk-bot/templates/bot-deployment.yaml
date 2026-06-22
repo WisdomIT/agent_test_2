@@ -17,8 +17,46 @@ spec:
         {{- include "chzzk-bot.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: bot
     spec:
+      {{- if and .Values.bot.waitForDependencies (or .Values.postgresql.enabled .Values.redis.enabled) }}
+      initContainers:
+        {{- if .Values.postgresql.enabled }}
+        - name: pg-ready
+          image: postgres:16-alpine
+          command:
+            - sh
+            - -c
+            - |
+              until pg_isready -h {{ include "chzzk-bot.fullname" . }}-postgresql -p 5432; do
+                echo "PostgreSQL 준비 대기 중...";
+                sleep 2;
+              done
+        {{- end }}
+        {{- if .Values.redis.enabled }}
+        - name: redis-ready
+          image: redis:7-alpine
+          command:
+            - sh
+            - -c
+            - |
+              until redis-cli -h {{ include "chzzk-bot.fullname" . }}-redis ping; do
+                echo "Redis 준비 대기 중...";
+                sleep 2;
+              done
+        {{- end }}
+      {{- end }}
       containers:
         - name: bot
           image: "{{ .Values.bot.image.repository }}:{{ .Values.bot.image.tag }}"
           imagePullPolicy: {{ .Values.bot.image.pullPolicy }}
+          {{- if or .Values.postgresql.enabled .Values.redis.enabled }}
+          env:
+            {{- if .Values.postgresql.enabled }}
+            - name: DATABASE_URL
+              value: "postgresql://{{ .Values.postgresql.user }}:{{ .Values.postgresql.password }}@{{ include "chzzk-bot.fullname" . }}-postgresql:5432/{{ .Values.postgresql.database }}"
+            {{- end }}
+            {{- if .Values.redis.enabled }}
+            - name: REDIS_URL
+              value: "redis://{{ if .Values.redis.password }}:{{ .Values.redis.password }}@{{ end }}{{ include "chzzk-bot.fullname" . }}-redis:6379"
+            {{- end }}
+          {{- end }}
           resources: {}

@@ -4,6 +4,7 @@ bot:
     repository: chzzk-bot/bot
     tag: latest
     pullPolicy: Always
+  waitForDependencies: true
 
 web:
   replicaCount: 1
@@ -14,6 +15,7 @@ web:
   containerPort: 3000
   service:
     port: 3000
+  waitForDependencies: false
 
 redis:
   enabled: true
