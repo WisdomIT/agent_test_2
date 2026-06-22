@@ -34,6 +34,12 @@ spec:
         {{- if .Values.redis.enabled }}
         - name: redis-ready
           image: redis:7-alpine
+          env:
+            - name: REDISCLI_AUTH
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.existingSecret | default (printf "%s-redis" (include "chzzk-bot.fullname" .)) }}
+                  key: {{ .Values.redis.existingSecretKey }}
           command:
             - sh
             - -c
