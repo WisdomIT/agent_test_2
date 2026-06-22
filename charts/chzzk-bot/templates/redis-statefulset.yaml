@@ -1,4 +1,5 @@
 {{- if .Values.redis.enabled }}
+{{- if .Values.redis.storage.hostPath.enabled }}
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -14,7 +15,7 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: ""
   hostPath:
-    path: {{ .Values.redis.storage.hostPath }}
+    path: {{ .Values.redis.storage.hostPath.path }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -32,6 +33,7 @@ spec:
       storage: {{ .Values.redis.storage.size }}
   volumeName: {{ include "chzzk-bot.fullname" . }}-redis
 ---
+{{- end }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -56,7 +58,6 @@ spec:
         - name: redis
           image: {{ .Values.redis.image }}
           imagePullPolicy: IfNotPresent
-          {{- if .Values.redis.password }}
           command:
             - redis-server
             - --requirepass
@@ -65,14 +66,13 @@ spec:
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "chzzk-bot.fullname" . }}-redis
-                  key: password
+                  name: {{ .Values.redis.existingSecret | default (printf "%s-redis" (include "chzzk-bot.fullname" .)) }}
+                  key: {{ .Values.redis.existingSecretKey }}
             - name: REDISCLI_AUTH
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "chzzk-bot.fullname" . }}-redis
-                  key: password
-          {{- end }}
+                  name: {{ .Values.redis.existingSecret | default (printf "%s-redis" (include "chzzk-bot.fullname" .)) }}
+                  key: {{ .Values.redis.existingSecretKey }}
           ports:
             - name: redis
               containerPort: 6379
@@ -90,8 +90,24 @@ spec:
             - name: data
               mountPath: /data
           resources: {}
+      {{- if .Values.redis.storage.hostPath.enabled }}
       volumes:
         - name: data
           persistentVolumeClaim:
             claimName: {{ include "chzzk-bot.fullname" . }}-redis
+      {{- end }}
+  {{- if not .Values.redis.storage.hostPath.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        {{- if .Values.redis.storage.storageClassName }}
+        storageClassName: {{ .Values.redis.storage.storageClassName }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.redis.storage.size }}
+  {{- end }}
 {{- end }}
