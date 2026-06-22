@@ -1,17 +1,4 @@
 {{- if .Values.redis.enabled }}
-{{- if .Values.redis.password }}
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ include "chzzk-bot.fullname" . }}-redis-config
-  labels:
-    {{- include "chzzk-bot.labels" . | nindent 4 }}
-    app.kubernetes.io/component: redis
-data:
-  redis.conf: |
-    requirepass {{ .Values.redis.password }}
----
-{{- end }}
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -72,7 +59,19 @@ spec:
           {{- if .Values.redis.password }}
           command:
             - redis-server
-            - /etc/redis/redis.conf
+            - --requirepass
+            - $(REDIS_PASSWORD)
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "chzzk-bot.fullname" . }}-redis
+                  key: password
+            - name: REDISCLI_AUTH
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "chzzk-bot.fullname" . }}-redis
+                  key: password
           {{- end }}
           ports:
             - name: redis
@@ -81,16 +80,8 @@ spec:
           readinessProbe:
             exec:
               command:
-                {{- if .Values.redis.password }}
-                - redis-cli
-                - -a
-                - {{ .Values.redis.password | quote }}
-                - --no-auth-warning
-                - ping
-                {{- else }}
                 - redis-cli
                 - ping
-                {{- end }}
             initialDelaySeconds: 5
             periodSeconds: 10
             timeoutSeconds: 5
@@ -98,18 +89,9 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /data
-            {{- if .Values.redis.password }}
-            - name: config
-              mountPath: /etc/redis
-            {{- end }}
           resources: {}
       volumes:
         - name: data
           persistentVolumeClaim:
             claimName: {{ include "chzzk-bot.fullname" . }}-redis
-        {{- if .Values.redis.password }}
-        - name: config
-          configMap:
-            name: {{ include "chzzk-bot.fullname" . }}-redis-config
-        {{- end }}
 {{- end }}
