@@ -58,8 +58,9 @@ spec:
             - name: http
               containerPort: {{ .Values.api.containerPort }}
               protocol: TCP
-          {{- if or .Values.postgresql.enabled .Values.redis.enabled }}
           env:
+            - name: PORT
+              value: "{{ .Values.api.containerPort }}"
             {{- if .Values.postgresql.enabled }}
             - name: PGHOST
               value: "{{ include "chzzk-bot.fullname" . }}-postgresql"
@@ -84,5 +85,4 @@ spec:
             - name: REDIS_URL
               value: "redis://:$(REDIS_PASSWORD)@{{ include "chzzk-bot.fullname" . }}-redis:6379"
             {{- end }}
-          {{- end }}
           resources: {}
