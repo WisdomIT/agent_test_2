@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "chzzk-bot.fullname" . }}-api
+  labels:
+    {{- include "chzzk-bot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  replicas: {{ .Values.api.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "chzzk-bot.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: api
+  template:
+    metadata:
+      labels:
+        {{- include "chzzk-bot.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: api
+    spec:
+      {{- if and .Values.api.waitForDependencies (or .Values.postgresql.enabled .Values.redis.enabled) }}
+      initContainers:
+        {{- if .Values.postgresql.enabled }}
+        - name: pg-ready
+          image: postgres:16-alpine
+          command:
+            - sh
+            - -c
+            - |
+              until pg_isready -h {{ include "chzzk-bot.fullname" . }}-postgresql -p 5432; do
+                echo "PostgreSQL 준비 대기 중...";
+                sleep 2;
+              done
+        {{- end }}
+        {{- if .Values.redis.enabled }}
+        - name: redis-ready
+          image: redis:7-alpine
+          env:
+            - name: REDISCLI_AUTH
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.existingSecret | default (printf "%s-redis" (include "chzzk-bot.fullname" .)) }}
+                  key: {{ .Values.redis.existingSecretKey }}
+          command:
+            - sh
+            - -c
+            - |
+              until redis-cli -h {{ include "chzzk-bot.fullname" . }}-redis ping; do
+                echo "Redis 준비 대기 중...";
+                sleep 2;
+              done
+        {{- end }}
+      {{- end }}
+      containers:
+        - name: api
+          image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
+          imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.api.containerPort }}
+              protocol: TCP
+          env:
+            - name: PORT
+              value: "{{ .Values.api.containerPort }}"
+            {{- if .Values.postgresql.enabled }}
+            - name: PGHOST
+              value: "{{ include "chzzk-bot.fullname" . }}-postgresql"
+            - name: PGPORT
+              value: "5432"
+            - name: PGDATABASE
+              value: "{{ .Values.postgresql.database }}"
+            - name: PGUSER
+              value: "{{ .Values.postgresql.user }}"
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgresql.existingSecret | default (printf "%s-postgresql" (include "chzzk-bot.fullname" .)) }}
+                  key: {{ .Values.postgresql.existingSecretKey }}
+            {{- end }}
+            {{- if .Values.redis.enabled }}
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.existingSecret | default (printf "%s-redis" (include "chzzk-bot.fullname" .)) }}
+                  key: {{ .Values.redis.existingSecretKey }}
+            - name: REDIS_URL
+              value: "redis://:$(REDIS_PASSWORD)@{{ include "chzzk-bot.fullname" . }}-redis:6379"
+            {{- end }}
+          resources: {}
