@@ -18,7 +18,7 @@ web:
   waitForDependencies: false
 
 redis:
-  enabled: true
+  enabled: false
   image: redis:7-alpine
   # 설치 시 반드시 제공: --set redis.password=<비밀번호>
   # 또는 existingSecret으로 기존 Secret을 참조하세요.
