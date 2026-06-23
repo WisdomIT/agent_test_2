@@ -17,6 +17,17 @@ web:
     port: 3000
   waitForDependencies: false
 
+api:
+  replicaCount: 1
+  image:
+    repository: chzzk-bot/api
+    tag: latest
+    pullPolicy: Always
+  containerPort: 3001
+  service:
+    port: 3001
+  waitForDependencies: true
+
 redis:
   enabled: false
   image: redis:7-alpine
